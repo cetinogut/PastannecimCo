@@ -12,6 +12,7 @@ using PastannecimCo.Data.Repositories;
 using PastannecimCo.Models.DTO;
 using PastannecimCo.Services.Implementations;
 using PastannecimCo.Services.Interfaces;
+using PastannecimCo.Services.NotificationRules;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,9 +44,15 @@ namespace PastannecimCo
             services.AddScoped<ICakeOrderRepository, CakeOrderRepository>();
             services.AddScoped<ICakeOrderService, CakeOrderService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IMessagingService, MessagingService>();
+
+            services.AddScoped<IStatusNotificationRule, CompletedNotificationRule>();
+            services.AddScoped<IStatusNotificationRule, AcceptedNotificationRule>();
+            services.AddScoped<INotificationHandler, NotificationHandler>();
 
             services.Configure<SendGridAccount>(Configuration.GetSection("SendGridAccount"));
             //1. Add "SendGridAccount" class in DTO. 2.Add it to AppSettings. 3. Add it to userSecrets. 4. Add it here.
+            services.Configure<TwilioAccount>(Configuration.GetSection("TwilioAccount"));
 
             //services.AddControllersWithViews();
             services.AddRazorPages().AddRazorRuntimeCompilation();

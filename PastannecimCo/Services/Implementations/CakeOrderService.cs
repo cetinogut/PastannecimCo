@@ -17,16 +17,19 @@ namespace PastannecimCo.Services.Implementations
     {
         private readonly IUserRepository _userRepository;
         private readonly ICakeOrderRepository _cakeOrderRepository;
-        private readonly IEmailService _emailService;
+        private readonly INotificationHandler _notificationHandler;
+
+        //private readonly IEmailService _emailService; //NotificationHandler e taşıdık, NotificiationRules içinde olacak.
 
         public CakeOrderService(IUserRepository userRepository,
-            ICakeOrderRepository cakeOrderRepository, IEmailService emailService)
+            ICakeOrderRepository cakeOrderRepository, INotificationHandler notificationHandler)
         {
             _userRepository = userRepository?? throw new ArgumentNullException(nameof(userRepository));
             _cakeOrderRepository = cakeOrderRepository?? throw new ArgumentNullException(nameof(cakeOrderRepository));
-            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            _notificationHandler = notificationHandler ?? throw new ArgumentNullException(nameof(notificationHandler));
+            //_emailService = emailService ?? throw new ArgumentNullException(nameof(emailService)); NotificiationRules içinde olacak.
         }
-        
+
         public async Task<ServiceResponse<CakeOrderViewModel>> AddNewOrderAsync(OrderDetails orderDetails)
         {
             var serviceResponse = new ServiceResponse<CakeOrderViewModel>();
@@ -127,14 +130,18 @@ namespace PastannecimCo.Services.Implementations
 
             entity.OrderStatus = cakeOrder.OrderStatus; // update de sadece status ü günceleyebiliyoruz şu an için. O yüzden o alanın viewden gelen değerini entity deki değere atıyoruz.// burada statu admin tarafından yönetim panelinden accepted e çevrilecek. ve sonrasında email göndereceğiz.
 
-            if (entity.OrderStatus == OrderStatus.Accepted)
-            {
-                var emailResponse = await _emailService.SendEmail(entity);
-            }
+            //if (entity.OrderStatus == OrderStatus.Accepted) // bu bölümü NotificationHandler oluşturunca yorum haliine getirdik. Aşağıda notificationHandler ı çağırıp oradan dönen serviceResponse ile işlem iyapıyoruz artık. Mesaj gönderme ve email gönderme order ın statuüsne göre otomatik olacak.. accepted ise email, completed ise whatsapp mesajı gidecek otomatik olarak Twilio üzerinden.
+            //{
+            //    var emailResponse = await _emailService.SendEmail(entity);
+            //}
+
             var cakeOrderEntity = await _cakeOrderRepository.UpdateAsync(entity);
 
+            var serviceResponse = await _notificationHandler.SendNotification(cakeOrderEntity);
+
             response.Content = cakeOrder;
-            response.ServiceResponseStatus = ServiceResponseStatus.Ok; 
+            response.ServiceResponseStatus = serviceResponse.ServiceResponseStatus;
+            response.Message = serviceResponse.Message;
 
             return response;
 

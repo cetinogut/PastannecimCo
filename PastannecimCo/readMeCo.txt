@@ -1,4 +1,6 @@
 
+DİKKAT!!!
+appSettings içindekiler secretes.json da tanımlanmıştır.
 Twilio Sandbox for WhatsApp Messaging kullanarak program geliştirebiliriz.
 Bunun için tunneling kullanmamız lazom. Yani localhost ta çalışan programımızın global bir adresi olması gerekiyor.
  Bunu da NGROK bize sağlıyor. NGROK ile 2-3 saatlik uygulama http adresleri üretip bunları client programlarda kullanabiliyoruz. 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using PastannecimCo.Models.DTO;
 using PastannecimCo.Models.Entities;
+using PastannecimCo.Models.Helpers;
 using PastannecimCo.Services.Interfaces;
 using SendGrid;
 using SendGrid.Helpers.Mail;
@@ -21,23 +22,32 @@ namespace PastannecimCo.Services.Implementations
             _account = account.Value ?? throw new ArgumentNullException(nameof(account));
         }
 
-        public async Task<Response> SendEmail(CakeOrder cakeOrder)
+        //public async Task<Response> SendEmail(CakeOrder cakeOrder) // NotificationHandler oluşturuken değiştirdik. Önceden bir email gönderince send grid ten aldığımız response yeterliydi. şimdi ServiceResponse döndüreceğiz ve bunu NotificationRules/AcceptedNotificationRule içinde kullanacağız
+        public async Task<ServiceResponse> SendEmail(CakeOrder cakeOrder)
         {
-           
+
             var email = CreateEmail(cakeOrder); // aşağıdaki method da email oluşturacağız.
             var message = MailHelper.CreateSingleEmail(
-                email.From, 
-                email.To, 
+                email.From,
+                email.To,
                 email.Subject,
-                email.PlainTextContent, 
+                email.PlainTextContent,
                 email.HtmlContent);
 
-            message.AddAttachment(email.FileName, EncodeAttachment(email.FilePath) ); // AddAttachment methodu filename ve base64 codename istiyor. Base64 ü aşağıda encodeAttachment meyhodunda üreteceğiz.
+            message.AddAttachment(email.FileName, EncodeAttachment(email.FilePath)); // AddAttachment methodu filename ve base64 codename istiyor. Base64 ü aşağıda encodeAttachment meyhodunda üreteceğiz.
 
             var client = new SendGridClient(_account.ApiKey); // user secret da sakladığımız SendGridAccount objesinin ApiKey property si.
 
-            var response = await client.SendEmailAsync(message); // mail gönderip aşağıda da response alıp bunu da bu methodun çağrıldığı yere geri göndereceğiz.
-            return response;
+            var emailResponse = await client.SendEmailAsync(message); // mail gönderip aşağıda da response alıp bunu da bu methodun çağrıldığı yere geri göndereceğiz.
+            //return emailResponse; // başlangıçta böyle planladık, ancak NotificationHandler oluşturunca aşağıdaki gibi değişti.
+
+            var serviceResponse = new ServiceResponse
+            {
+                Message = " email sent...",
+                ServiceResponseStatus = Models.Enums.ServiceResponseStatus.Ok
+            };
+            
+            return serviceResponse;
 
         }
 
