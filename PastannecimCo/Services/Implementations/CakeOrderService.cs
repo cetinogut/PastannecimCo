@@ -17,12 +17,14 @@ namespace PastannecimCo.Services.Implementations
     {
         private readonly IUserRepository _userRepository;
         private readonly ICakeOrderRepository _cakeOrderRepository;
+        private readonly IEmailService _emailService;
 
         public CakeOrderService(IUserRepository userRepository,
-            ICakeOrderRepository cakeOrderRepository)
+            ICakeOrderRepository cakeOrderRepository, IEmailService emailService)
         {
             _userRepository = userRepository?? throw new ArgumentNullException(nameof(userRepository));
             _cakeOrderRepository = cakeOrderRepository?? throw new ArgumentNullException(nameof(cakeOrderRepository));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         }
         
         public async Task<ServiceResponse<CakeOrderViewModel>> AddNewOrderAsync(OrderDetails orderDetails)
@@ -123,12 +125,16 @@ namespace PastannecimCo.Services.Implementations
 
             var entity = await _cakeOrderRepository.GetCakeOrderByIdAsync(cakeOrder.Id);
 
-            entity.OrderStatus = cakeOrder.OrderStatus; // update de sadece status ü günceleyebiliyoruz şu an için. O yüzden o alanın viewden gelen değerini entity deki değere atıyoruz.
+            entity.OrderStatus = cakeOrder.OrderStatus; // update de sadece status ü günceleyebiliyoruz şu an için. O yüzden o alanın viewden gelen değerini entity deki değere atıyoruz.// burada statu admin tarafından yönetim panelinden accepted e çevrilecek. ve sonrasında email göndereceğiz.
 
+            if (entity.OrderStatus == OrderStatus.Accepted)
+            {
+                var emailResponse = await _emailService.SendEmail(entity);
+            }
             var cakeOrderEntity = await _cakeOrderRepository.UpdateAsync(entity);
 
             response.Content = cakeOrder;
-            response.ServiceResponseStatus = ServiceResponseStatus.Ok;
+            response.ServiceResponseStatus = ServiceResponseStatus.Ok; 
 
             return response;
 

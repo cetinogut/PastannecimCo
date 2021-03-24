@@ -41,8 +41,9 @@ namespace PastannecimCo
 
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ICakeOrderRepository, CakeOrderRepository>();
-
             services.AddScoped<ICakeOrderService, CakeOrderService>();
+            services.AddScoped<IEmailService, EmailService>();
+
             services.Configure<SendGridAccount>(Configuration.GetSection("SendGridAccount"));
             //1. Add "SendGridAccount" class in DTO. 2.Add it to AppSettings. 3. Add it to userSecrets. 4. Add it here.
 
